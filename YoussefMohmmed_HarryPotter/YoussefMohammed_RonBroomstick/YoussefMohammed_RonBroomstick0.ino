@@ -1,16 +1,16 @@
 #include <Wire.h>
 const int i2c_addr = 0x3F;
 const int led_pin = 13;
-
+int temp;
 int gyro_x,gyro_y,gyro_z;
-long gyro_x_cal,gyro_y_call,gyro_z_cal;
+long gyro_x_cal,gyro_y_cal,gyro_z_cal;
 boolean set_gyro_angles ;
 
 long acc_x, acc_y, acc_z, acc_total_vector;
 float angle_roll_acc, angle_pitch_acc;
 
-float angle_pitch,angel_roll;
-int angle_pitch_buffer, angel_roll_buffer;
+float angle_pitch,angle_roll;
+int angle_pitch_buffer, angle_roll_buffer;
 float angle_pitch_output,angle_roll_output;
 
 
@@ -24,12 +24,12 @@ void setup() {
 
   Wire.begin();
 
-  pinMode(led_pin,OUTPUT)
+  pinMode(led_pin,OUTPUT);
 
   setup_imu_registers();
 
   for (int cal_int  = 0 ;  cal_int < 1000  ; cal_int ++){
-    read_mpu_6050_data();
+    read_imu();
 
     gyro_x_cal += gyro_x;
 
@@ -57,11 +57,11 @@ void loop() {
 
   angle_pitch += gyro_x * 0.0000611;
 
-  angel_roll += gyro_y *0.0000611;
+  angle_roll += gyro_y *0.0000611;
 
-  angle_pitch += angel_roll*sin(gyro_z*0.000001066);
+  angle_pitch += angle_roll*sin(gyro_z*0.000001066);
 
-  angel_roll += angel_pitch*sin(gyro_z*0.000001066);
+  angle_roll += angle_pitch*sin(gyro_z*0.000001066);
 
 
   acc_total_vector = sqrt((acc_x*acc_x)+(acc_y*acc_y)+(acc_z*acc_z));
@@ -74,9 +74,9 @@ void loop() {
 
   if(set_gyro_angles){
 
-    angle_pitch = angle_pitch*0.9996 + angel_pitch_acc*0.0004;
+    angle_pitch = angle_pitch*0.9996 + angle_pitch_acc*0.0004;
 
-    angle_pitch = angle_pitch*0.9996 + angel_pitch_acc*0.0004;
+    angle_pitch = angle_pitch*0.9996 + angle_pitch_acc*0.0004;
   }
   else{
     angle_pitch = angle_pitch_acc;
@@ -84,7 +84,7 @@ void loop() {
     set_gyro_angles = true;
   }
 
-  angle_pitch_output = angle_pitch_output * 09 + angle_pitch *0.1;
+  angle_pitch_output = angle_pitch_output * 0.9 + angle_pitch *0.1;
 
   angle_roll_output = angle_roll_output*0.9 + angle_roll * 0.1;
 
@@ -142,7 +142,7 @@ void read_imu(){
 
   Wire.requestFrom(0x68,14);
 
-  While(Wire.available()<14);
+  while(Wire.available()<14);
 
   acc_x = Wire.read()<<8|Wire.read();
   acc_y = Wire.read()<<8|Wire.read();
@@ -168,7 +168,7 @@ unsigned long currentMillis = millis();
     } else {
       ledState = LOW;
     }
-     digitalWrite(ledPin, ledState);
+     digitalWrite(led_pin, ledState);
   }
-  digitalWrite(ledPin, LOW);
+  digitalWrite(led_pin, LOW);
 }
